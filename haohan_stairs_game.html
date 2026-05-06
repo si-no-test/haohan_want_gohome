@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你能幫助浩瀚順利走出建北大樓嗎？</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Press+Start+2P&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a1a;
+    color: #fff;
+    font-family: 'Noto Sans TC', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  #title-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    text-align: center;
+    background: radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%);
+  }
+
+  #title-screen h1 {
+    font-size: clamp(1.2rem, 3vw, 2rem);
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow: 0 0 20px rgba(255,215,0,0.5);
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+
+  .haohan-img-wrap {
+    width: 160px;
+    height: 200px;
+    margin: 1.5rem auto;
+    position: relative;
+    filter: drop-shadow(0 0 20px rgba(255,215,0,0.4));
+  }
+
+  .haohan-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .start-btn {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    padding: 1rem 3rem;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #000;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(255,215,0,0.4);
+  }
+  .start-btn:hover { transform: scale(1.05); box-shadow: 0 6px 30px rgba(255,215,0,0.6); }
+
+  .instructions {
+    margin-top: 1.5rem;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 12px;
+    padding: 1.2rem 1.8rem;
+    max-width: 480px;
+    text-align: left;
+  }
+  .instructions h3 { color: #ffd700; margin-bottom: 0.8rem; font-size: 1rem; }
+  .instructions li { margin-bottom: 0.5rem; font-size: 0.9rem; color: #ccc; line-height: 1.5; }
+  .instructions .spike { color: #ff4444; }
+  .instructions .slow { color: #ff8800; }
+
+  /* GAME SCREEN */
+  #game-screen { display: none; position: relative; }
+
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 1.2rem;
+    background: rgba(10,10,26,0.95);
+    border-bottom: 2px solid rgba(255,215,0,0.4);
+  }
+
+  .lives {
+    display: flex;
+    gap: 8px;
+    font-size: 1.4rem;
+  }
+  .heart { transition: opacity 0.3s; }
+  .heart.lost { opacity: 0.2; filter: grayscale(1); }
+
+  #score-display {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffd700;
+  }
+
+  #floor-display {
+    font-size: 0.9rem;
+    color: #aaa;
+  }
+
+  #game-canvas-wrap {
+    margin-top: 60px;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: calc(100vh - 60px);
+  }
+
+  #game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #0f0f2a;
+  }
+
+  /* GAME OVER */
+  #gameover-screen {
+    display: none;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at center, #1a0a0a 0%, #0a0a1a 70%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 2rem 1rem 4rem;
+    text-align: center;
+  }
+
+  #gameover-screen h2 {
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    color: #ff4444;
+    margin-bottom: 0.5rem;
+    font-weight: 900;
+  }
+
+  #gameover-score {
+    font-size: 1.4rem;
+    color: #ffd700;
+    margin-bottom: 1.5rem;
+  }
+
+  .name-entry {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,215,0,0.4);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    max-width: 400px;
+  }
+  .name-entry h3 { color: #ffd700; margin-bottom: 1rem; font-size: 1rem; }
+  .name-entry input {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+    font-family: 'Noto Sans TC', sans-serif;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    color: #fff;
+    margin-bottom: 0.8rem;
+    outline: none;
+  }
+  .name-entry input:focus { border-color: #ffd700; }
+  .submit-btn {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.7rem 2rem;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.2s;
+  }
+  .submit-btn:hover { opacity: 0.85; }
+  .submit-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .retry-btn {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.8rem 2.5rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background 0.2s;
+  }
+  .retry-btn:hover { background: rgba(255,255,255,0.2); }
+
+  /* LEADERBOARD */
+  .leaderboard {
+    width: 100%;
+    max-width: 500px;
+    margin-top: 1rem;
+  }
+  .leaderboard h3 {
+    color: #ffd700;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .lb-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .lb-table th {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    color: #aaa;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    text-align: left;
+  }
+  .lb-table td {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.95rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .lb-table tr.highlight td { color: #ffd700; font-weight: 700; }
+  .lb-rank { color: #aaa; width: 2.5rem; }
+  .lb-rank.gold { color: #ffd700; }
+  .lb-rank.silver { color: #c0c0c0; }
+  .lb-rank.bronze { color: #cd7f32; }
+  .lb-name { flex: 1; }
+  .lb-score { text-align: right; color: #ffd700; }
+  .lb-date { font-size: 0.75rem; color: #666; text-align: right; }
+
+  .loading-lb { color: #888; font-size: 0.9rem; text-align: center; padding: 1rem; }
+
+  /* Animated entrance */
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-in { animation: fadeInDown 0.5s ease forwards; }
+
+  /* Spike warning flash */
+  @keyframes flashRed {
+    0%, 100% { background: #0f0f2a; }
+    50% { background: #3a0a0a; }
+  }
+  .spike-flash { animation: flashRed 0.3s ease; }
+</style>
+</head>
+<body>
+
+<!-- TITLE SCREEN -->
+<div id="title-screen">
+  <h1>你能幫助浩瀚<br>順利走出建北大樓嗎？</h1>
+  <div class="haohan-img-wrap">
+    <img id="haohan-portrait" src="" alt="浩瀚" />
+  </div>
+  <button class="start-btn" onclick="startGame()">🚶 開始下樓</button>
+  <div class="instructions">
+    <h3>📋 遊戲說明</h3>
+    <ul>
+      <li>按 <strong>←→</strong> 方向鍵 / A D 鍵左右移動</li>
+      <li>浩瀚會自動往下走，你要幫他閃過障礙！</li>
+      <li class="spike">⚠️ 踩到尖刺樓梯會扣一條命（共三命）</li>
+      <li class="slow">🏃 走太慢被擠出畫面上方也算失敗</li>
+      <li>每下一層樓得一分，樓層越多走越快！</li>
+    </ul>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen">
+  <div id="hud">
+    <div class="lives" id="lives-display">
+      <span class="heart" id="h1">❤️</span>
+      <span class="heart" id="h2">❤️</span>
+      <span class="heart" id="h3">❤️</span>
+    </div>
+    <div id="score-display">📊 分數：<span id="score-num">0</span></div>
+    <div id="floor-display">🏢 <span id="floor-num">20</span>F</div>
+  </div>
+  <div id="game-canvas-wrap">
+    <canvas id="game-canvas"></canvas>
+  </div>
+</div>
+
+<!-- GAME OVER SCREEN -->
+<div id="gameover-screen">
+  <h2 style="margin-top:2rem">😢 浩瀚沒能準時離開大樓⋯</h2>
+  <div id="gameover-score">你陪他走了 <span id="final-score">0</span> 層</div>
+
+  <div class="name-entry" id="name-entry-box">
+    <h3>📝 請留下大名，登上排行榜！</h3>
+    <input type="text" id="player-name" placeholder="輸入你的名字" maxlength="12" />
+    <button class="submit-btn" id="submit-btn" onclick="submitScore()">確認送出</button>
+  </div>
+
+  <div class="leaderboard">
+    <h3>🏆 全球排行榜</h3>
+    <div id="lb-content"><div class="loading-lb">載入中⋯</div></div>
+  </div>
+
+  <button class="retry-btn" onclick="restartGame()">🔄 再試一次</button>
+</div>
+
+<script>
+// ─── ASSET: encode the uploaded photo as data URL ───
+// We'll draw the character using canvas shapes since we can't embed the actual photo
+// The photo has a transparent background (black BG in original)
+
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+
+// ─── GAME STATE ───
+let state = 'title';
+let score = 0;
+let lives = 3;
+let gameLoop = null;
+let scrollSpeed = 1.5;
+let scrollY = 0;
+let floorHeight = 90;
+let floorsPassed = 0;
+let startFloor = 20;
+let keys = {};
+let lastTime = 0;
+
+// Player
+let player = { x: 0, y: 0, w: 44, h: 64, vx: 0, vy: 0, onGround: false, frame: 0, frameTimer: 0 };
+
+// Platforms
+let platforms = [];
+let particles = [];
+let invincible = 0;
+
+// ─── CANVAS RESIZE ───
+function resizeCanvas() {
+  const wrap = document.getElementById('game-canvas-wrap');
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+}
+
+// ─── DRAW HAOHAN CHARACTER ───
+function drawHaohan(x, y, w, h, frame, inv) {
+  const cx = x + w / 2;
+  if (inv > 0 && Math.floor(inv / 6) % 2 === 0) return; // blink effect
+
+  ctx.save();
+  const legOff = Math.sin(frame * 0.15) * 8;
+
+  // Shoes
+  ctx.fillStyle = '#1a1a2e';
+  ctx.beginPath(); ctx.ellipse(cx - 9, y + h + 2, 10, 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + 9, y + h + 2, 10, 6, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Legs / pants
+  ctx.fillStyle = '#1a1a3e';
+  ctx.fillRect(cx - 14, y + h - 28 + legOff, 11, 28);
+  ctx.fillRect(cx + 3, y + h - 28 - legOff, 11, 28);
+
+  // Shirt body
+  ctx.fillStyle = '#f0f0f0';
+  ctx.beginPath();
+  ctx.roundRect(cx - 18, y + 22, 36, 36, 4);
+  ctx.fill();
+
+  // Arms
+  const armSwing = Math.sin(frame * 0.15) * 10;
+  ctx.fillStyle = '#f5d5c0';
+  // Left arm
+  ctx.save();
+  ctx.translate(cx - 18, y + 28);
+  ctx.rotate((-0.3 + armSwing * 0.03) * Math.PI);
+  ctx.fillRect(-7, 0, 13, 28);
+  ctx.restore();
+  // Right arm (holding rose)
+  ctx.save();
+  ctx.translate(cx + 18, y + 28);
+  ctx.rotate((0.3 - armSwing * 0.03) * Math.PI);
+  ctx.fillRect(-6, 0, 13, 28);
+  // Rose in hand
+  ctx.fillStyle = '#cc2244';
+  ctx.beginPath(); ctx.arc(3, 32, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#228833';
+  ctx.fillRect(2, 32, 3, 16);
+  ctx.restore();
+
+  // Shirt collar
+  ctx.fillStyle = '#f0f0f0';
+  ctx.beginPath();
+  ctx.moveTo(cx - 6, y + 22);
+  ctx.lineTo(cx, y + 32);
+  ctx.lineTo(cx + 6, y + 22);
+  ctx.fill();
+
+  // Head / face
+  ctx.fillStyle = '#f5d5c0';
+  ctx.beginPath();
+  ctx.ellipse(cx, y + 14, 16, 17, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hair
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.ellipse(cx, y + 3, 17, 12, 0, 0, Math.PI);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx - 13, y + 8, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx + 13, y + 8, 7, 0, Math.PI * 2); ctx.fill();
+
+  // Glasses
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx - 6, y + 14, 5, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx + 6, y + 14, 5, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx - 1, y + 14); ctx.lineTo(cx + 1, y + 14); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx - 11, y + 13); ctx.lineTo(cx - 13, y + 12); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx + 11, y + 13); ctx.lineTo(cx + 13, y + 12); ctx.stroke();
+
+  // Eyes / expression
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.ellipse(cx - 6, y + 15, 2.5, 2, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + 6, y + 15, 2.5, 2, 0, 0, Math.PI * 2); ctx.fill();
+
+  ctx.restore();
+}
+
+// ─── PLATFORM GENERATION ───
+function generatePlatforms() {
+  platforms = [];
+  const W = canvas.width;
+  const cols = 3;
+  const gapW = 40;
+
+  // Generate enough platforms to fill screen + buffer
+  for (let i = 0; i < 30; i++) {
+    const y = i * floorHeight;
+    addFloorRow(y, W, i);
+  }
+}
+
+function addFloorRow(y, W, index) {
+  const cols = 3;
+  const totalGap = (cols - 1) * 10;
+  const pw = (W - 60 - totalGap) / cols;
+
+  // Decide which platforms exist (at least one gap for movement)
+  const gapCol = Math.floor(Math.random() * cols);
+  // Some floors are mostly solid (no gap on some)
+  const fullFloor = Math.random() < 0.2 && index > 5;
+
+  for (let c = 0; c < cols; c++) {
+    const px = 30 + c * (pw + 10);
+
+    if (!fullFloor && c === gapCol) continue; // gap
+
+    // Spike chance increases with depth
+    const spikeChance = Math.min(0.08 + floorsPassed * 0.005, 0.28);
+    const isSpike = Math.random() < spikeChance && index > 3;
+
+    platforms.push({
+      x: px, y: y, w: pw, h: 18,
+      spike: isSpike,
+      color: isSpike ? '#cc2244' : '#2a4a8a'
+    });
+  }
+}
+
+// ─── SCROLL & RECYCLE ───
+function recyclePlatforms() {
+  const W = canvas.width;
+  // Remove platforms that scrolled way past top
+  platforms = platforms.filter(p => p.y > scrollY - 200);
+
+  // Add new platforms at the bottom
+  const bottomMost = Math.max(...platforms.map(p => p.y));
+  while (bottomMost + floorHeight * 2 < scrollY + canvas.height + 200) {
+    const newY = bottomMost + floorHeight;
+    addFloorRow(newY, W, Math.floor(newY / floorHeight));
+  }
+}
+
+// ─── COLLISION ───
+function checkCollisions() {
+  player.onGround = false;
+
+  for (const p of platforms) {
+    const py = p.y - scrollY;
+    // Only check platforms near player
+    if (py > player.y + player.h + 10) continue;
+    if (py + p.h < player.y - 5) continue;
+
+    const overlapX = player.x < p.x + p.w && player.x + player.w > p.x;
+    const overlapY = player.y + player.h > py && player.y + player.h < py + p.h + player.vy + 4;
+    const fallingOnto = player.vy >= 0;
+
+    if (overlapX && overlapY && fallingOnto) {
+      player.y = py - player.h;
+      player.vy = 0;
+      player.onGround = true;
+
+      if (p.spike && invincible <= 0) {
+        loseLife();
+        invincible = 80;
+        // Flash
+        document.getElementById('game-canvas-wrap').classList.add('spike-flash');
+        setTimeout(() => document.getElementById('game-canvas-wrap').classList.remove('spike-flash'), 300);
+      }
+
+      // Score: how many floors down
+      const currentFloor = startFloor - Math.floor(player.y / floorHeight);
+      if (currentFloor < startFloor - score) {
+        const gained = (startFloor - score) - currentFloor;
+        score += gained;
+        floorsPassed += gained;
+        document.getElementById('score-num').textContent = score;
+        document.getElementById('floor-num').textContent = Math.max(1, startFloor - score);
+        // Speed up
+        scrollSpeed = 1.5 + floorsPassed * 0.04;
+      }
+
+      break;
+    }
+  }
+}
+
+// ─── LOSE LIFE ───
+function loseLife() {
+  lives--;
+  const hEl = document.getElementById('h' + (lives + 1));
+  if (hEl) hEl.classList.add('lost');
+  if (lives <= 0) {
+    endGame('noLives');
+  }
+}
+
+// ─── GAME OVER ───
+function endGame(reason) {
+  state = 'gameover';
+  cancelAnimationFrame(gameLoop);
+  gameLoop = null;
+
+  document.getElementById('game-screen').style.display = 'none';
+  const go = document.getElementById('gameover-screen');
+  go.style.display = 'flex';
+
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('name-entry-box').style.display = 'block';
+  document.getElementById('player-name').value = '';
+
+  loadLeaderboard();
+}
+
+// ─── MAIN GAME LOOP ───
+function gameFrame(ts) {
+  if (state !== 'playing') return;
+  gameLoop = requestAnimationFrame(gameFrame);
+
+  const dt = Math.min((ts - lastTime) / 16.67, 3);
+  lastTime = ts;
+
+  // Scroll
+  scrollY += scrollSpeed * dt;
+
+  // Check top-boundary death
+  if (player.y < scrollY - 20) {
+    endGame('topBoundary');
+    return;
+  }
+
+  // Player horizontal movement
+  const speed = 4.5;
+  if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+    player.vx = -speed;
+  } else if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+    player.vx = speed;
+  } else {
+    player.vx *= 0.8;
+  }
+
+  // Gravity
+  if (!player.onGround) player.vy += 0.45 * dt;
+  player.vy = Math.min(player.vy, 18);
+
+  player.x += player.vx * dt;
+  player.y += player.vy * dt;
+
+  // Wall bounds
+  if (player.x < 0) player.x = 0;
+  if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
+
+  // If player falls below screen (missed all platforms, rare)
+  if (player.y - scrollY > canvas.height + 100) {
+    // Teleport to safe platform below
+    const nearest = platforms.filter(p => p.y > scrollY + 50 && !p.spike).sort((a,b) => a.y - b.y)[0];
+    if (nearest) { player.y = nearest.y - player.h; player.vy = 0; }
+  }
+
+  // Invincibility timer
+  if (invincible > 0) invincible--;
+
+  // Animate player
+  player.frameTimer++;
+  if (player.frameTimer > 6) { player.frame++; player.frameTimer = 0; }
+
+  checkCollisions();
+  recyclePlatforms();
+  drawScene();
+}
+
+// ─── DRAW SCENE ───
+function drawScene() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background
+  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  grad.addColorStop(0, '#0a0a1a');
+  grad.addColorStop(1, '#0f1a3a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw floor number indicators on left wall
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.fillRect(0, 0, 28, canvas.height);
+  ctx.fillRect(canvas.width - 28, 0, 28, canvas.height);
+
+  // Platforms
+  for (const p of platforms) {
+    const py = p.y - scrollY;
+    if (py > canvas.height + 20 || py < -40) continue;
+
+    if (p.spike) {
+      // Danger platform
+      ctx.fillStyle = '#330011';
+      ctx.fillRect(p.x, py, p.w, p.h);
+      ctx.fillStyle = '#cc2244';
+      ctx.fillRect(p.x, py, p.w, 3);
+
+      // Spike triangles
+      const spCount = Math.floor(p.w / 14);
+      ctx.fillStyle = '#ff3366';
+      for (let s = 0; s < spCount; s++) {
+        const sx = p.x + s * 14 + 2;
+        ctx.beginPath();
+        ctx.moveTo(sx, py);
+        ctx.lineTo(sx + 6, py - 14);
+        ctx.lineTo(sx + 12, py);
+        ctx.fill();
+      }
+      // Warning glow
+      ctx.shadowColor = '#ff0044';
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = '#ff3366';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(p.x, py, p.w, p.h);
+      ctx.shadowBlur = 0;
+    } else {
+      // Normal platform — stair look
+      ctx.fillStyle = '#1e3a6e';
+      ctx.fillRect(p.x, py, p.w, p.h);
+      ctx.fillStyle = '#2a5298';
+      ctx.fillRect(p.x, py, p.w, 4);
+      ctx.fillStyle = '#4472c4';
+      ctx.fillRect(p.x, py, p.w, 2);
+      // Edge highlights
+      ctx.fillStyle = '#1a2a5a';
+      ctx.fillRect(p.x, py + p.h - 3, p.w, 3);
+    }
+  }
+
+  // Player
+  const relY = player.y - scrollY;
+  drawHaohan(player.x, relY, player.w, player.h, player.frame, invincible);
+
+  // Danger zone indicator at top
+  const dangerH = 24;
+  const dangerGrad = ctx.createLinearGradient(0, 0, 0, dangerH * 2);
+  dangerGrad.addColorStop(0, 'rgba(200,0,0,0.5)');
+  dangerGrad.addColorStop(1, 'rgba(200,0,0,0)');
+  ctx.fillStyle = dangerGrad;
+  ctx.fillRect(0, 0, canvas.width, dangerH * 2);
+
+  // Speed indicator
+  const speedPercent = Math.min((scrollSpeed - 1.5) / 5, 1);
+  if (speedPercent > 0) {
+    ctx.fillStyle = `rgba(255, ${Math.floor(200 * (1 - speedPercent))}, 0, 0.6)`;
+    ctx.font = 'bold 11px Noto Sans TC, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`⚡ 速度 ${Math.round(scrollSpeed * 10) / 10}x`, canvas.width / 2, canvas.height - 10);
+    ctx.textAlign = 'left';
+  }
+}
+
+// ─── CONTROLS ───
+document.addEventListener('keydown', e => { keys[e.key] = true; });
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+// Touch controls
+let touchStartX = 0;
+canvas.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+}, { passive: true });
+canvas.addEventListener('touchmove', e => {
+  const dx = e.touches[0].clientX - touchStartX;
+  if (dx > 20) { keys['ArrowRight'] = true; keys['ArrowLeft'] = false; }
+  else if (dx < -20) { keys['ArrowLeft'] = true; keys['ArrowRight'] = false; }
+}, { passive: true });
+canvas.addEventListener('touchend', () => {
+  keys['ArrowLeft'] = false;
+  keys['ArrowRight'] = false;
+}, { passive: true });
+
+// ─── START GAME ───
+function startGame() {
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+
+  resizeCanvas();
+
+  state = 'playing';
+  score = 0;
+  lives = 3;
+  scrollSpeed = 1.5;
+  scrollY = 0;
+  floorsPassed = 0;
+  invincible = 0;
+  keys = {};
+
+  // Reset HUD
+  document.getElementById('score-num').textContent = '0';
+  document.getElementById('floor-num').textContent = startFloor;
+  ['h1','h2','h3'].forEach(id => {
+    document.getElementById(id).classList.remove('lost');
+  });
+
+  // Place player on first platform
+  generatePlatforms();
+  const firstPlatform = platforms.find(p => p.y > 60 && !p.spike);
+  player.x = canvas.width / 2 - player.w / 2;
+  player.y = firstPlatform ? firstPlatform.y - player.h : 80;
+  player.vx = 0;
+  player.vy = 0;
+  player.frame = 0;
+
+  lastTime = performance.now();
+  gameLoop = requestAnimationFrame(gameFrame);
+}
+
+function restartGame() {
+  document.getElementById('gameover-screen').style.display = 'none';
+  startGame();
+}
+
+// ─── LEADERBOARD (Shared Storage) ───
+const LB_KEY = 'haohan_stairs_leaderboard_v1';
+
+async function loadLeaderboard() {
+  document.getElementById('lb-content').innerHTML = '<div class="loading-lb">載入排行榜⋯</div>';
+  try {
+    const result = await window.storage.get(LB_KEY, true);
+    const entries = result ? JSON.parse(result.value) : [];
+    renderLeaderboard(entries);
+  } catch (e) {
+    renderLeaderboard([]);
+  }
+}
+
+async function submitScore() {
+  const nameInput = document.getElementById('player-name');
+  const name = nameInput.value.trim();
+  if (!name) { nameInput.focus(); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '送出中⋯';
+
+  try {
+    let entries = [];
+    try {
+      const result = await window.storage.get(LB_KEY, true);
+      entries = result ? JSON.parse(result.value) : [];
+    } catch (e) {}
+
+    entries.push({
+      name: name.substring(0, 12),
+      score: score,
+      date: new Date().toLocaleDateString('zh-TW')
+    });
+
+    // Sort desc, keep top 20
+    entries.sort((a, b) => b.score - a.score);
+    entries = entries.slice(0, 20);
+
+    await window.storage.set(LB_KEY, JSON.stringify(entries), true);
+
+    document.getElementById('name-entry-box').style.display = 'none';
+    renderLeaderboard(entries, name);
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = '確認送出';
+    alert('送出失敗，請稍後再試');
+  }
+}
+
+function renderLeaderboard(entries, highlightName) {
+  const container = document.getElementById('lb-content');
+  if (!entries || entries.length === 0) {
+    container.innerHTML = '<div class="loading-lb">還沒有人登上排行榜，成為第一個！</div>';
+    return;
+  }
+
+  const medals = ['🥇', '🥈', '🥉'];
+  let html = '<table class="lb-table"><thead><tr><th>#</th><th>名字</th><th>層數</th><th>日期</th></tr></thead><tbody>';
+
+  entries.forEach((entry, i) => {
+    const isHighlight = highlightName && entry.name === highlightName && entry.score === score;
+    const rankClass = i < 3 ? ['gold','silver','bronze'][i] : '';
+    const rankLabel = medals[i] || (i + 1);
+    html += `<tr class="${isHighlight ? 'highlight' : ''}">
+      <td class="lb-rank ${rankClass}">${rankLabel}</td>
+      <td class="lb-name">${escapeHtml(entry.name)}</td>
+      <td class="lb-score">${entry.score} 層</td>
+      <td class="lb-date">${entry.date || ''}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── LOAD CHARACTER IMAGE ───
+window.onload = function() {
+  // Try to load the character image (will be replaced with actual photo when hosted)
+  const img = document.getElementById('haohan-portrait');
+  img.src = '4BA23981-3EAD-4BED-A915-B9C70A5AEBFE.jpg';
+  img.onerror = function() {
+    // If image not found, show placeholder
+    img.style.display = 'none';
+  };
+
+  // Load character image for canvas
+  window.charImg = new Image();
+  window.charImg.src = '4BA23981-3EAD-4BED-A915-B9C70A5AEBFE.jpg';
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+};
+</script>
+
+</body>
+</html>
