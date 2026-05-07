@@ -496,4 +496,25 @@ function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/
 
 </script>
 </body>
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDWUYbvicLzU-VGOMLcjWRWcw5B3B1HH6I",
+  authDomain: "haohan-ac0d4.firebaseapp.com",
+  projectId: "haohan-ac0d4",
+  storageBucket: "haohan-ac0d4.firebasestorage.app",
+  messagingSenderId: "636406921806",
+  appId: "1:636406921806:web:1ab786b2325cfd7048a11f",
+  measurementId: "G-8KR2F8M0W6"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 </html>
