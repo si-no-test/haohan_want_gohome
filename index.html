@@ -33,9 +33,9 @@ body { background:#0a0a1a; color:#fff; font-family:'Noto Sans TC',sans-serif; ov
 canvas { 
   display: block; 
   width: 100%; 
-  max-width: 450px; /* 新增：限制最大寬度，適合手機直向感 */
-  height: 100%; 
-  margin: 0 auto;   /* 新增：置中顯示 */
+  max-width: 600px; /* 從 450px 改為 600px，增加寬度感 */
+  height: 85vh;     /* 稍微縮短高度，避免過於狹長 */
+  margin: 0 auto; 
   background: #0f0f2a; 
 }
 
@@ -83,7 +83,7 @@ canvas {
       <li><span class="key">W</span> 或 <span class="key">↑</span> 跳躍（跳過尖刺！）</li>
       <li>浩瀚會貼著地板，走到缺口自動掉落</li>
       <li style="color:#ff5566">⚠️ 踩到紅色尖刺扣一命（共三命）</li>
-      <li style="color:#ff8822">🏃 被上方邊界擠出也算失敗</li>
+      <li style="color:#ff8822">🏃 被上方或下方邊界擠出也算失敗</li>
     </ul>
   </div>
 </div>
@@ -167,14 +167,12 @@ function makePlatforms() {
 function spawnRow(worldY) {
   const W = cvs.width;
   const depth = Math.floor(worldY / FLOOR_H);
-  
-  // --- 第 3 點：讓平台隨難度變窄 ---
-  // 隨著層數(depth)增加，寬度從 100 逐漸縮小到最小 50
-  const pw = Math.max(50, 100 - Math.min(50, depth * 0.5)); 
 
-  // --- 第 2 點：水平位置完全隨機 ---
-  // 確保 x 座標不會讓平台超出右邊邊界 (W - pw)
+  // 將最小寬度從 50 提高到 80，最大寬度從 100 提高到 150
+  const pw = Math.max(80, 150 - Math.min(50, depth * 0.3)); 
+
   const x = Math.random() * (W - pw);
+  // ...其餘代碼保持不變
 
   // 計算尖刺機率
   const spikeChance = Math.min(0.07 + depth * 0.003, 0.22);
@@ -241,6 +239,11 @@ function loop(ts) {
   if (!scrollFrozen && py + P_H < scrollY - 10) {
     endGame(); return;
   }
+  // 找到類似判斷遊戲結束的地方
+// 如果原本是 py > scrollY + cvs.height
+if (py > scrollY + cvs.height + 50) { // 加上 50 像素的緩衝，掉下去一點點還不會死
+    gameOver();
+}
 
   // ── HORIZONTAL ──
   if (keys['ArrowLeft'] || keys['a'] || keys['A']) pvx = -H_SPEED;
