@@ -30,7 +30,14 @@ body { background:#0a0a1a; color:#fff; font-family:'Noto Sans TC',sans-serif; ov
 #score-display { font-size:0.95rem; font-weight:700; color:#ffd700; }
 #floor-display { font-size:0.85rem; color:#aaa; }
 #cvs-wrap { position:absolute; top:52px; left:0; right:0; bottom:0; overflow:hidden; }
-canvas { display:block; width:100%; height:100%; }
+canvas { 
+  display: block; 
+  width: 100%; 
+  max-width: 450px; /* 新增：限制最大寬度，適合手機直向感 */
+  height: 100%; 
+  margin: 0 auto;   /* 新增：置中顯示 */
+  background: #0f0f2a; 
+}
 
 /* countdown */
 #cd { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); z-index:50; }
@@ -159,18 +166,27 @@ function makePlatforms() {
 
 function spawnRow(worldY) {
   const W = cvs.width;
-  const cols = 3;
-  const gap = 10;
-  const margin = 28;
-  const pw = (W - margin * 2 - gap * (cols - 1)) / cols;
-  const gapCol = Math.floor(Math.random() * cols);
-  for (let c = 0; c < cols; c++) {
-    if (c === gapCol) continue;
-    const x = margin + c * (pw + gap);
-    const depth = Math.floor(worldY / FLOOR_H);
-    const spikeChance = Math.min(0.07 + depth * 0.003, 0.22);
-    const spike = depth > 3 && Math.random() < spikeChance;
-    platforms.push({ x, y: worldY, w: pw, h: PLAT_H, spike });
+  const depth = Math.floor(worldY / FLOOR_H);
+  
+  // --- 第 3 點：讓平台隨難度變窄 ---
+  // 隨著層數(depth)增加，寬度從 100 逐漸縮小到最小 50
+  const pw = Math.max(50, 100 - Math.min(50, depth * 0.5)); 
+
+  // --- 第 2 點：水平位置完全隨機 ---
+  // 確保 x 座標不會讓平台超出右邊邊界 (W - pw)
+  const x = Math.random() * (W - pw);
+
+  // 計算尖刺機率
+  const spikeChance = Math.min(0.07 + depth * 0.003, 0.22);
+  const spike = depth > 3 && Math.random() < spikeChance;
+
+  // 存入平台陣列
+  platforms.push({ x, y: worldY, w: pw, h: PLAT_H, spike });
+  
+  // 額外挑戰：如果層數高了，有機會在一行生成兩個平台
+  if (depth > 10 && Math.random() > 0.7) {
+      const x2 = (x + W/2) % (W - pw); // 在另一個位置也放一個
+      platforms.push({ x: x2, y: worldY, w: pw, h: PLAT_H, spike: false });
   }
 }
 
